@@ -103,7 +103,7 @@ class RefractionBox(wx.Panel):
         self.checkbox_indirect_transitions = wx.CheckBox(self, -1, u"¬клад непр€мых переходов", style=wx.ALIGN_LEFT)
         self.Bind(wx.EVT_CHECKBOX, self.check_indirect_transitions, self.checkbox_indirect_transitions)
         self.checkbox_indirect_transitions.SetValue(False)
-
+        
         # !!! разобратьс€ с сайзерами, потому что не работают
         box = wx.StaticBox(self, -1, label)
         sizer = wx.StaticBoxSizer(box, wx.VERTICAL)
