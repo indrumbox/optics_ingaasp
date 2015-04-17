@@ -157,6 +157,7 @@ class MainFrame(wx.Frame):
         #self.hbox2.Add(self.ymin_control, border=5, flag=wx.ALL)
         #self.hbox2.Add(self.ymax_control, border=5, flag=wx.ALL)
         
+        # устанавливаем сайзеры
         self.vbox = wx.BoxSizer(wx.VERTICAL)
         self.vbox.Add(self.canvas, 1, flag=wx.LEFT | wx.TOP | wx.GROW)        
         self.vbox.Add(self.hbox1, 0, flag=wx.ALIGN_LEFT | wx.TOP)
