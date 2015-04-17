@@ -4,19 +4,18 @@ import pprint
 import random
 import sys
 import wx
-# бэкенд WXAgg - совместное использование wx и mpl
 import matplotlib
-matplotlib.use('WXAgg')
+matplotlib.use('WXAgg')  # бэкенд WXAgg - совместное использование wx и mpl
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_wxagg import \
     FigureCanvasWxAgg as FigCanvas, \
     NavigationToolbar2WxAgg as NavigationToolbar
 import numpy as np
 import pylab
-# лечим кириллицу в графиках
-from matplotlib import rc
+from matplotlib import rc # лечим кириллицу в графиках
 font = {'family': 'Verdana', 'weight': 'normal'}
 rc('font', **font)
+
 
 class DataGen(object):
     """ A silly class that generates pseudo-random data for
@@ -24,18 +23,18 @@ class DataGen(object):
     """
     def __init__(self, init=50):
         self.data = self.init = init
-        
+
     def next(self):
         self._recalc_data()
         return self.data
-    
+
     def _recalc_data(self):
         delta = random.uniform(-0.5, 0.5)
         r = random.random()
 
         if r > 0.9:
             self.data += delta * 15
-        elif r > 0.8: 
+        elif r > 0.8:
             # attraction to the initial value
             delta += (0.5 if self.init > self.data else -0.5)
             self.data += delta
@@ -82,6 +81,55 @@ class CompoundBox(wx.Panel):
         self.composition = evt.GetString()
 
 
+class RefractionBox(wx.Panel):
+    """ Блок выбора вкладов в показатель преломления.
+    """
+    def __init__(self, parent, ID, label):
+        wx.Panel.__init__(self, parent, ID)
+
+        # создаём чекбоксы:
+        self.checkbox_g_transitions = wx.CheckBox(self, -1, u"Вклад Г-переходов", style=wx.ALIGN_LEFT)
+        self.Bind(wx.EVT_CHECKBOX, self.check_g_transitions, self.checkbox_g_transitions)
+        self.checkbox_g_transitions.SetValue(False)
+
+        self.checkbox_l_transitions = wx.CheckBox(self, -1, u"Вклад L-переходов", style=wx.ALIGN_LEFT)
+        self.Bind(wx.EVT_CHECKBOX, self.check_l_transitions, self.checkbox_l_transitions)
+        self.checkbox_l_transitions.SetValue(False)
+
+        self.checkbox_x_transitions = wx.CheckBox(self, -1, u"Вклад X-переходов", style=wx.ALIGN_LEFT)
+        self.Bind(wx.EVT_CHECKBOX, self.check_x_transitions, self.checkbox_x_transitions)
+        self.checkbox_x_transitions.SetValue(False)
+
+        self.checkbox_indirect_transitions = wx.CheckBox(self, -1, u"Вклад непрямых переходов", style=wx.ALIGN_LEFT)
+        self.Bind(wx.EVT_CHECKBOX, self.check_indirect_transitions, self.checkbox_indirect_transitions)
+        self.checkbox_indirect_transitions.SetValue(False)
+
+        # !!! разобраться с сайзерами, потому что не работают
+        box = wx.StaticBox(self, -1, label)
+        sizer = wx.StaticBoxSizer(box, wx.VERTICAL)
+        sizer1 = wx.StaticBoxSizer(sizer, wx.HORIZONTAL)
+        sizer2 = wx.StaticBoxSizer(sizer, wx.HORIZONTAL)
+        sizer1.Add(self.checkbox_g_transitions, 0, wx.ALL | wx.ALIGN_LEFT, 4)
+        sizer1.Add(self.checkbox_l_transitions, 0, wx.ALL | wx.ALIGN_LEFT, 4)
+        sizer2.Add(self.checkbox_x_transitions, 0, wx.ALL | wx.ALIGN_LEFT, 4)
+        sizer2.Add(self.checkbox_indirect_transitions, 0, wx.ALL | wx.ALIGN_LEFT, 4)
+        sizer.Add(sizer1, 0, wx.ALL, 0)
+        sizer.Add(sizer2, 0, wx.ALL, 0)
+        self.SetSizer(sizer)
+        sizer.Fit(self)
+
+    def check_g_transitions(self, evt):
+        pass
+
+    def check_l_transitions(self, evt):
+        pass
+
+    def check_x_transitions(self, evt):
+        pass
+
+    def check_indirect_transitions(self, evt):
+        pass
+
 
 class MainFrame(wx.Frame):
     """ Основной фрейм приложения
@@ -90,18 +138,18 @@ class MainFrame(wx.Frame):
     
     def __init__(self):
         wx.Frame.__init__(self, None, -1, self.title)
-        
+
         self.datagen = DataGen()
         self.data = [self.datagen.next()]
         self.paused = False
-        
+
         self.create_menu()
         self.create_status_bar()
         self.create_main_panel()
-        
-        #self.redraw_timer = wx.Timer(self)
-        #self.Bind(wx.EVT_TIMER, self.on_redraw_timer, self.redraw_timer)
-        #self.redraw_timer.Start(100)
+
+        self.redraw_timer = wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self.on_redraw_timer, self.redraw_timer)
+        self.redraw_timer.Start(100)
 
     def create_menu(self):
         self.menubar = wx.MenuBar()
@@ -123,21 +171,14 @@ class MainFrame(wx.Frame):
         self.canvas = FigCanvas(self.panel, -1, self.fig)
 
         self.compound_control = CompoundBox(self.panel, -1, u'Выбор материала')
-        #self.xmax_control = BoundControlBox(self.panel, -1, "X max", 50)
-        #self.ymin_control = BoundControlBox(self.panel, -1, "Y min", 0)
-        #self.ymax_control = BoundControlBox(self.panel, -1, "Y max", 100)
-        
+        self.refraction_block = RefractionBox(self.panel, -1, u'Показатель преломления')
+
         self.bandgap_button = wx.Button(self.panel, -1, u"Ширина запрещенной зоны")
         self.Bind(wx.EVT_BUTTON, self.show_bandgap, self.bandgap_button)
         #self.Bind(wx.EVT_UPDATE_UI, self.on_update_pause_button, self.pause_button)
         self.redlambda_button = wx.Button(self.panel, -1, u"Граничная длина волны")
         self.Bind(wx.EVT_BUTTON, self.show_redlambda, self.redlambda_button)
 
-        # как создавать чекбоксы:
-        #self.cb_grid = wx.CheckBox(self.panel, -1, "Show Grid", style=wx.ALIGN_RIGHT)
-        #self.Bind(wx.EVT_CHECKBOX, self.on_cb_grid, self.cb_grid)
-        #self.cb_grid.SetValue(True)
-        
         self.hbox1 = wx.BoxSizer(wx.HORIZONTAL)
         self.hbox1.Add(self.bandgap_button, border=5, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL)
         self.hbox1.AddSpacer(5)
@@ -146,7 +187,7 @@ class MainFrame(wx.Frame):
 
         self.hbox2 = wx.BoxSizer(wx.HORIZONTAL)
         self.hbox2.Add(self.compound_control, border=5, flag=wx.ALL)
-        #self.hbox2.Add(self.xmax_control, border=5, flag=wx.ALL)
+        self.hbox2.Add(self.refraction_block, border=5, flag=wx.ALL)
         #self.hbox2.AddSpacer(24)
         #self.hbox2.Add(self.ymin_control, border=5, flag=wx.ALL)
         #self.hbox2.Add(self.ymax_control, border=5, flag=wx.ALL)
@@ -197,15 +238,15 @@ class MainFrame(wx.Frame):
         # sliding window effect. therefore, xmin is assigned after
         # xmax.
         #
-        if self.xmax_control.is_auto():
-            xmax = len(self.data) if len(self.data) > 50 else 50
-        else:
-            xmax = int(self.xmax_control.manual_value())
+        #if self.xmax_control.is_auto():
+        xmax = len(self.data) if len(self.data) > 50 else 50
+        #else:
+        #    xmax = int(self.xmax_control.manual_value())
             
-        if self.xmin_control.is_auto():            
-            xmin = xmax - 50
-        else:
-            xmin = int(self.xmin_control.manual_value())
+        #if self.xmin_control.is_auto():
+        xmin = xmax - 50
+        #else:
+        #    xmin = int(self.xmin_control.manual_value())
 
         # for ymin and ymax, find the minimal and maximal values
         # in the data set and add a mininal margin.
@@ -214,15 +255,15 @@ class MainFrame(wx.Frame):
         # minimal/maximal value in the current display, and not
         # the whole data set.
         # 
-        if self.ymin_control.is_auto():
-            ymin = round(min(self.data), 0) - 1
-        else:
-            ymin = int(self.ymin_control.manual_value())
+        #if self.ymin_control.is_auto():
+        ymin = round(min(self.data), 0) - 1
+        #else:
+        #    ymin = int(self.ymin_control.manual_value())
         
-        if self.ymax_control.is_auto():
-            ymax = round(max(self.data), 0) + 1
-        else:
-            ymax = int(self.ymax_control.manual_value())
+        #if self.ymax_control.is_auto():
+        ymax = round(max(self.data), 0) + 1
+        #else:
+        #    ymax = int(self.ymax_control.manual_value())
 
         self.axes.set_xbound(lower=xmin, upper=xmax)
         self.axes.set_ybound(lower=ymin, upper=ymax)
@@ -232,17 +273,17 @@ class MainFrame(wx.Frame):
         # so just passing the flag into the first statement won't
         # work.
         #
-        if self.cb_grid.IsChecked():
-            self.axes.grid(True, color='gray')
-        else:
-            self.axes.grid(False)
+        #if self.cb_grid.IsChecked():
+        self.axes.grid(True, color='gray')
+        #else:
+        #    self.axes.grid(False)
 
         # Using setp here is convenient, because get_xticklabels
         # returns a list over which one needs to explicitly 
         # iterate, and setp already handles this.
         #  
         pylab.setp(self.axes.get_xticklabels(), 
-            visible=self.cb_xlab.IsChecked())
+            visible=True)
         
         self.plot_data.set_xdata(np.arange(len(self.data)))
         self.plot_data.set_ydata(np.array(self.data))
@@ -254,7 +295,7 @@ class MainFrame(wx.Frame):
     
     def on_update_pause_button(self, event):
         label = "Resume" if self.paused else "Pause"
-        self.pause_button.SetLabel(label)
+        #self.pause_button.SetLabel(label)
     
     def on_cb_grid(self, event):
         self.draw_plot()
