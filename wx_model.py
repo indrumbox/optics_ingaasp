@@ -44,9 +44,7 @@ class DataGen(object):
 
 
 class CompoundBox(wx.Panel):
-    """ A static box with a couple of radio buttons and a text
-        box. Allows to switch between an automatic mode and a 
-        manual mode with an associated value.
+    """ Блок выбора материала и состава материала (если выбран InGaAsP).
     """
     def __init__(self, parent, ID, label):
         wx.Panel.__init__(self, parent, ID)
@@ -83,8 +81,10 @@ class CompoundBox(wx.Panel):
     def setComposition(self, evt):
         self.composition = evt.GetString()
 
+
+
 class MainFrame(wx.Frame):
-    """ The main frame of the application
+    """ Основной фрейм приложения
     """
     title = u'Моделирование оптических параметров материалов InGaAsP/InP'
     
@@ -128,28 +128,22 @@ class MainFrame(wx.Frame):
         #self.ymax_control = BoundControlBox(self.panel, -1, "Y max", 100)
         
         self.bandgap_button = wx.Button(self.panel, -1, u"Ширина запрещенной зоны")
-        self.Bind(wx.EVT_BUTTON, self.showBandgap, self.bandgap_button)
+        self.Bind(wx.EVT_BUTTON, self.show_bandgap, self.bandgap_button)
         #self.Bind(wx.EVT_UPDATE_UI, self.on_update_pause_button, self.pause_button)
-        
-        self.cb_grid = wx.CheckBox(self.panel, -1, 
-            "Show Grid",
-            style=wx.ALIGN_RIGHT)
-        self.Bind(wx.EVT_CHECKBOX, self.on_cb_grid, self.cb_grid)
-        self.cb_grid.SetValue(True)
-        
-        self.cb_xlab = wx.CheckBox(self.panel, -1, 
-            "Show X labels",
-            style=wx.ALIGN_RIGHT)
-        self.Bind(wx.EVT_CHECKBOX, self.on_cb_xlab, self.cb_xlab)        
-        self.cb_xlab.SetValue(True)
+        self.redlambda_button = wx.Button(self.panel, -1, u"Граничная длина волны")
+        self.Bind(wx.EVT_BUTTON, self.show_redlambda, self.redlambda_button)
+
+        # как создавать чекбоксы:
+        #self.cb_grid = wx.CheckBox(self.panel, -1, "Show Grid", style=wx.ALIGN_RIGHT)
+        #self.Bind(wx.EVT_CHECKBOX, self.on_cb_grid, self.cb_grid)
+        #self.cb_grid.SetValue(True)
         
         self.hbox1 = wx.BoxSizer(wx.HORIZONTAL)
-        self.hbox1.Add(self.pause_button, border=5, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL)
-        self.hbox1.AddSpacer(20)
-        self.hbox1.Add(self.cb_grid, border=5, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL)
+        self.hbox1.Add(self.bandgap_button, border=5, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL)
+        self.hbox1.AddSpacer(5)
+        self.hbox1.Add(self.redlambda_button, border=5, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL)
         self.hbox1.AddSpacer(10)
-        self.hbox1.Add(self.cb_xlab, border=5, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL)
-        
+
         self.hbox2 = wx.BoxSizer(wx.HORIZONTAL)
         self.hbox2.Add(self.compound_control, border=5, flag=wx.ALL)
         #self.hbox2.Add(self.xmax_control, border=5, flag=wx.ALL)
@@ -165,7 +159,13 @@ class MainFrame(wx.Frame):
         
         self.panel.SetSizer(self.vbox)
         self.vbox.Fit(self)
-    
+
+    def show_bandgap(self, evt):
+        pass
+
+    def show_redlambda(self, evt):
+        pass
+
     def create_status_bar(self):
         self.statusbar = self.CreateStatusBar()
 
