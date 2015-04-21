@@ -27,7 +27,7 @@ Structures = {'GaAs': {'A': 3.45, 'B1': 6.37, 'B11': 13.08, 'G': 0.10, 'C': 2.39
                       'E1': 3.70, 'delta1': 0.1, 'E2': 5.0}}
 
 
-class Structure():
+class Structure_edge():
 
     def __init__(self, x, y):
         self.x = x
@@ -102,10 +102,10 @@ def return_vegard(parameter, x, y):
     '''
     Возвращает значение параметра parameter для промежуточных значений x и y
     '''
-    InP = Structure(x=0, y=0)
-    InAs = Structure(x=0, y=1)
-    GaP = Structure(x=1, y=0)
-    GaAs = Structure(x=1, y=1)
+    InP = Structure_edge(x=0, y=0)
+    InAs = Structure_edge(x=0, y=1)
+    GaP = Structure_edge(x=1, y=0)
+    GaAs = Structure_edge(x=1, y=1)
 
     edge_values = list()
     edge_values.append(GaAs.find_parameter(parameter))
@@ -127,10 +127,10 @@ def show(parameter):
     #X, Y, Z = axes3d.get_test_data(.05)
     #Z = [[1., 2.], [3., 5.]]
 
-    InP = Structure(x=0, y=0)
-    InAs = Structure(x=0, y=1)
-    GaP = Structure(x=1, y=0)
-    GaAs = Structure(x=1, y=1)
+    InP = Structure_edge(x=0, y=0)
+    InAs = Structure_edge(x=0, y=1)
+    GaP = Structure_edge(x=1, y=0)
+    GaAs = Structure_edge(x=1, y=1)
     Collection = [InP, InAs, GaP, GaAs]
 
     # выводим угловые значения силовых параметров

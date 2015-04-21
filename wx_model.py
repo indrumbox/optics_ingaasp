@@ -5,6 +5,7 @@ import random
 import sys
 import wx
 import matplotlib
+import dsci
 matplotlib.use('WXAgg')  # бэкенд WXAgg - совместное использование wx и mpl
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_wxagg import \
@@ -166,17 +167,12 @@ class MainFrame(wx.Frame):
     def __init__(self):
         wx.Frame.__init__(self, None, -1, self.title)
 
-        self.datagen = DataGen()
-        self.data = [self.datagen.next()]
-        self.paused = False
+        self.data = [0, 1, 3, 1]
+        self.structure_data = dsci.Structure(0., 0.)
 
         self.create_menu()
         self.create_status_bar()
         self.create_main_panel()
-
-        self.redraw_timer = wx.Timer(self)
-        self.Bind(wx.EVT_TIMER, self.on_redraw_timer, self.redraw_timer)
-        self.redraw_timer.Start(100)
 
     def create_menu(self):
         self.menubar = wx.MenuBar()
@@ -226,10 +222,27 @@ class MainFrame(wx.Frame):
         self.vbox.Fit(self)
 
     def show_bandgap(self, evt):
-        pass
+        compositions_y = np.arange(0, 1, 0.01)
+        Eg_pack = [dsci.Eg_on_InP(dsci.x_on_InP(y), y) for y in compositions_y]
+        Eg_transformed = np.array(Eg_pack)
+        x_label = u"Состав "+r"$y$"+u" соединения "+r"$In_{1-x}Ga_{x}As_{y}P_{1-y}/InP$"
+        y_label = u"Ширина запрещенной зоны, эВ"
+        main_label = u"Ширина запрещенной зоны"
+
+        self.draw_plot(compositions_y, Eg_transformed, title_main=main_label,
+                       title_y=y_label, title_x=x_label)
+
 
     def show_redlambda(self, evt):
-        pass
+        compositions_y = np.arange(0, 1, 0.01)
+        lambda_pack = [dsci.lambda_red_on_inp(dsci.x_on_InP(y), y) for y in compositions_y]
+        lambda_pack_transformed = np.array(lambda_pack)
+        x_label = u"Состав "+r"$y$"+u" соединения "+r"$In_{1-x}Ga_{x}As_{y}P_{1-y}/InP$"
+        y_label = u"Граничная длина волны, мкм"
+        main_label = u"Граничная длина волны"
+
+        self.draw_plot(compositions_y, lambda_pack_transformed, title_main=main_label,
+                       title_y=y_label, title_x=x_label)
 
     def create_status_bar(self):
         self.statusbar = self.CreateStatusBar()
@@ -241,91 +254,27 @@ class MainFrame(wx.Frame):
         self.axes = self.fig.add_subplot(111)
         self.axes.set_axis_bgcolor('white')
 
-        self.axes.set_title('Very important random data', size=12)
+        self.axes.set_title('', size=12)
         
         pylab.setp(self.axes.get_xticklabels(), fontsize=8)
         pylab.setp(self.axes.get_yticklabels(), fontsize=8)
 
-        # plot the data as a line series, and save the reference 
-        # to the plotted line series
-        #
-        self.plot_data = self.axes.plot(
-            self.data, 
-            linewidth=1,
-            color=(0, 0, 0),
-            )[0]
-
-    def draw_plot(self):
-        """ Redraws the plot
-        """
-        # when xmin is on auto, it "follows" xmax to produce a 
-        # sliding window effect. therefore, xmin is assigned after
-        # xmax.
-        #
-        #if self.xmax_control.is_auto():
-        xmax = len(self.data) if len(self.data) > 50 else 50
-        #else:
-        #    xmax = int(self.xmax_control.manual_value())
-            
-        #if self.xmin_control.is_auto():
-        xmin = xmax - 50
-        #else:
-        #    xmin = int(self.xmin_control.manual_value())
-
-        # for ymin and ymax, find the minimal and maximal values
-        # in the data set and add a mininal margin.
-        # 
-        # note that it's easy to change this scheme to the 
-        # minimal/maximal value in the current display, and not
-        # the whole data set.
-        # 
-        #if self.ymin_control.is_auto():
-        ymin = round(min(self.data), 0) - 1
-        #else:
-        #    ymin = int(self.ymin_control.manual_value())
-        
-        #if self.ymax_control.is_auto():
-        ymax = round(max(self.data), 0) + 1
-        #else:
-        #    ymax = int(self.ymax_control.manual_value())
-
-        self.axes.set_xbound(lower=xmin, upper=xmax)
-        self.axes.set_ybound(lower=ymin, upper=ymax)
-        
-        # anecdote: axes.grid assumes b=True if any other flag is
-        # given even if b is set to False.
-        # so just passing the flag into the first statement won't
-        # work.
-        #
-        #if self.cb_grid.IsChecked():
         self.axes.grid(True, color='gray')
-        #else:
-        #    self.axes.grid(False)
+        self.plot_data = self.axes.plot([0], linewidth=1, color=(0, 0, 0))[0]
 
-        # Using setp here is convenient, because get_xticklabels
-        # returns a list over which one needs to explicitly 
-        # iterate, and setp already handles this.
-        #  
-        pylab.setp(self.axes.get_xticklabels(), 
-            visible=True)
-        
-        self.plot_data.set_xdata(np.arange(len(self.data)))
-        self.plot_data.set_ydata(np.array(self.data))
-        
+        pylab.setp(self.axes.get_xticklabels(), visible=True)
+
+
+    def draw_plot(self, x_arr, y_arr, title_main="", title_x="", title_y=""):
+        self.plot_data.set_xdata(np.array(x_arr))
+        self.plot_data.set_ydata(np.array(y_arr))
+
+        self.axes.set_xbound(lower=min(x_arr), upper=max(x_arr))
+        self.axes.set_ybound(lower=min(y_arr), upper=max(y_arr))
+        self.axes.set_title(title_main, size=12)
+        self.axes.set_xlabel(title_x)
+        self.axes.set_ylabel(title_y)
         self.canvas.draw()
-    
-    def on_pause_button(self, event):
-        self.paused = not self.paused
-    
-    def on_update_pause_button(self, event):
-        label = "Resume" if self.paused else "Pause"
-        #self.pause_button.SetLabel(label)
-    
-    def on_cb_grid(self, event):
-        self.draw_plot()
-    
-    def on_cb_xlab(self, event):
-        self.draw_plot()
     
     def on_save_plot(self, event):
         file_choices = "PNG (*.png)|*.png"
@@ -343,27 +292,12 @@ class MainFrame(wx.Frame):
             self.canvas.print_figure(path, dpi=self.dpi)
             self.flash_status_message("Saved to %s" % path)
     
-    def on_redraw_timer(self, event):
-        # if paused do not add data, but still redraw the plot
-        # (to respond to scale modifications, grid change, etc.)
-        #
-        if not self.paused:
-            self.data.append(self.datagen.next())
-        
-        self.draw_plot()
-    
     def on_exit(self, event):
         self.Destroy()
     
     def flash_status_message(self, msg, flash_len_ms=1500):
         self.statusbar.SetStatusText(msg)
-        self.timeroff = wx.Timer(self)
-        self.Bind(
-            wx.EVT_TIMER, 
-            self.on_flash_status_off, 
-            self.timeroff)
-        self.timeroff.Start(flash_len_ms, oneShot=True)
-    
+
     def on_flash_status_off(self, event):
         self.statusbar.SetStatusText('')
 
