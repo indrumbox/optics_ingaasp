@@ -45,39 +45,50 @@ class DataGen(object):
 class ModifiedSpinControl(wx.Panel):
     def __init__(self, parent, ID, label, init_value):
         wx.Panel.__init__(self, parent, -1)
-        self.count = 0
-        self.text = wx.TextCtrl(self, -1, str(init_value), (30, 50), (60, -1))
-        h = self.text.GetSize().height
-        w = self.text.GetSize().width + self.text.GetPosition().x + 2
+
+        self.label = wx.StaticText(self, -1, label)
+        self.text = wx.TextCtrl(self, -1, str(init_value), size=(45, -1)) # (30, 50), (60, -1)
+        h = self.text.GetSize().height + self.text.GetPosition().y
+        w = self.text.GetSize().width + self.text.GetPosition().x + 1
 
         self.spin = wx.SpinButton(self, -1,
-                                  (w, 50),
-                                  (h*2/3, h),
+                                  (w, self.text.GetPosition().y),
+                                  (h, h),
                                   wx.SP_VERTICAL)
         self.spin.SetRange(-100, 100)
         self.spin.SetValue(init_value)
-        print label, init_value
-        self.previous = 0
-        self.Bind(wx.EVT_SPIN, self.OnSpin, self.spin)
 
-    def OnSpin(self, event):
-        delta = float(event.GetPosition()) # это абсолютное значение позиции вентиля, как получить знак смещения?
-        print delta
+        self.Bind(wx.EVT_SPIN_UP, self.OnSpinUp, self.spin)
+        self.Bind(wx.EVT_SPIN_DOWN, self.OnSpinDn, self.spin)
+
+        sizer = wx.BoxSizer(wx.HORIZONTAL)
+        sizer.Add(self.label, 0, wx.ALL | wx.CENTER, 1)
+        sizer.Add(self.text, 0, wx.ALL | wx.CENTER, 1)
+        sizer.Add(self.spin, 0, wx.ALL | wx.CENTER, 1)
+        self.SetSizer(sizer)
+        sizer.Fit(self)
+
+    def OnSpinUp(self, event):
         current_value = float(self.text.GetValue())
-        next_value = current_value+0.01*delta
+        next_value = current_value+0.01
+        self.text.SetValue(str(next_value))
+
+    def OnSpinDn(self, event):
+        current_value = float(self.text.GetValue())
+        next_value = current_value-0.01
         self.text.SetValue(str(next_value))
 
 class SpinSection(wx.Panel):
-    def __init__(self, parent, ID, label):
+    def __init__(self, parent, ID, label, xmin=0., xmax=0., ymin=0., ymax=0.):
         wx.Panel.__init__(self, parent, ID)
         box = wx.StaticBox(self, -1, label)
 
-        self.xmin = ModifiedSpinControl(self, -1, u"xmin", 0.01)
-        self.xmax = ModifiedSpinControl(self, -1, u"xmax", 1.0)
-        self.ymin = ModifiedSpinControl(self, -1, u"ymin", 0.1)
-        self.ymax = ModifiedSpinControl(self, -1, u"ymax", 3.0)
+        self.xmin = ModifiedSpinControl(self, -1, u"xmin: ", xmin)
+        self.xmax = ModifiedSpinControl(self, -1, u"xmax: ", xmax)
+        self.ymin = ModifiedSpinControl(self, -1, u"ymin: ", ymin)
+        self.ymax = ModifiedSpinControl(self, -1, u"ymax: ", ymax)
 
-
+        #todo: как прикрутить к спинам зависимость от координат графика?
         sizer = wx.StaticBoxSizer(box, wx.VERTICAL)
 
         sizer.Add(self.xmin, 0, wx.ALL, 3)
@@ -389,7 +400,8 @@ class MainFrame(wx.Frame):
         self.axes.set_xlabel(title_x)
         self.axes.set_ylabel(title_y)
         self.canvas.draw()
-    
+
+
     def on_save_plot(self, event):
         file_choices = "PNG (*.png)|*.png"
         
