@@ -24,11 +24,15 @@ class Structure():
     def __init__(self, x, y):
         self.x = x
         self.y = y
+
         self.lambdas = [i*0.01 for i in range(1, 500)]
         self.energies = [self.get_energy(lam) for lam in self.lambdas]
+        self.sellmeiers = [self.sellmeier(lam) for lam in self.lambdas]
         self.refraction_g_pack = []
         self.refraction_x_pack = []
         self.refraction_l_pack = []
+
+
 
     def get_lambdas(self):
         return self.lambdas
@@ -47,13 +51,11 @@ class Structure():
         epsilon = A + (B * lambda_value * lambda_value) / (lambda_value * lambda_value - C)
         return math.sqrt(abs(epsilon))
 
-    def get_sellmeier_pack(self, lambdas_pack):
-        sellmeier_pack = []
-        for lambda_value in lambdas_pack:
-            sellmeier_pack.append(self.sellmeier(lambda_value))
-        return sellmeier_pack
+    def get_sellmeier_pack(self):
+        return self.sellmeiers
 
-test = Structure(0., 0.)
-print test.get_lambdas()
-print test.get_energies()
-print test.sellmeier(1.0)
+y = 0.0
+x = x_on_InP(y)
+test = Structure(x, y)
+print test.get_sellmeier_pack()
+print len(test.get_sellmeier_pack())

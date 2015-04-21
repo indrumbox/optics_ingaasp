@@ -115,14 +115,16 @@ class SellmeierBox(wx.Panel):
     def push_sellmeier_data(self):
         # отрисовка графика зависимости
         compound = dsci.Structure(dsci.x_on_InP(self.composition), self.composition)
-        lambda_pack = compound.get_lambdas()
+
         if self.lambda_checked():
             # выбрана реализация по длине волны
-            x_pack = lambda_pack
+            x_pack = compound.get_lambdas()
         else:
             # выбрана отрисовка по энергии
             x_pack = compound.get_energies()
-        y_pack = compound.get_sellmeier_pack(x_pack)
+        y_pack = compound.get_sellmeier_pack()
+        print y_pack
+        print self.composition
         return x_pack, y_pack
 
 
@@ -130,7 +132,7 @@ class SellmeierBox(wx.Panel):
         return self.on_wave.GetValue()
 
     def setComposition(self, evt):
-        self.composition = evt.GetString()
+        self.composition = float(evt.GetString())
 
 class RefractionBox(wx.Panel):
     """ Блок выбора вкладов в показатель преломления.
