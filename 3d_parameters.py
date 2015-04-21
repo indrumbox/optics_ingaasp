@@ -59,10 +59,8 @@ class Structure():
     def find_by_xy(self, x, y):
         # проходя по наборам составов (x, y), ищем соответствующий бинарник
         if self.x == x and self.y == y:
-            #print self.core, "True"
             return True
         else:
-            #print self.core, "False"
             return False
 
 
@@ -99,6 +97,26 @@ def edges(collection, x, y, flag_parameter):
 def Vegard(edge_values, x, y):
     GaAs_value, GaP_value, InAs_value, InP_value = edge_values
     return x*y*GaAs_value + x*(1-y)*GaP_value + y*(1-x)*InAs_value + (1-y)*(1-x)*InP_value
+
+def return_vegard(parameter, x, y):
+    '''
+    Возвращает значение параметра parameter для промежуточных значений x и y
+    '''
+    InP = Structure(x=0, y=0)
+    InAs = Structure(x=0, y=1)
+    GaP = Structure(x=1, y=0)
+    GaAs = Structure(x=1, y=1)
+
+    edge_values = list()
+    edge_values.append(GaAs.find_parameter(parameter))
+    edge_values.append(GaP.find_parameter(parameter))
+    edge_values.append(InAs.find_parameter(parameter))
+    edge_values.append(InP.find_parameter(parameter))
+    return Vegard(edge_values, x, y)
+
+#print return_vegard("A", 0., 0.)
+#print return_vegard("A", 0., 1.)
+#print return_vegard("A", 0.5, 0.5)
 
 
 def show(parameter):
