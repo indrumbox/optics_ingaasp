@@ -42,6 +42,50 @@ class DataGen(object):
         else:
             self.data += delta
 
+class ModifiedSpinControl(wx.Panel):
+    def __init__(self, parent, ID, label, init_value):
+        wx.Panel.__init__(self, parent, -1)
+        self.count = 0
+        self.text = wx.TextCtrl(self, -1, str(init_value), (30, 50), (60, -1))
+        h = self.text.GetSize().height
+        w = self.text.GetSize().width + self.text.GetPosition().x + 2
+
+        self.spin = wx.SpinButton(self, -1,
+                                  (w, 50),
+                                  (h*2/3, h),
+                                  wx.SP_VERTICAL)
+        self.spin.SetRange(-100, 100)
+        self.spin.SetValue(init_value)
+        print label, init_value
+        self.previous = 0
+        self.Bind(wx.EVT_SPIN, self.OnSpin, self.spin)
+
+    def OnSpin(self, event):
+        delta = float(event.GetPosition()) # это абсолютное значение позиции вентиля, как получить знак смещения?
+        print delta
+        current_value = float(self.text.GetValue())
+        next_value = current_value+0.01*delta
+        self.text.SetValue(str(next_value))
+
+class SpinSection(wx.Panel):
+    def __init__(self, parent, ID, label):
+        wx.Panel.__init__(self, parent, ID)
+        box = wx.StaticBox(self, -1, label)
+
+        self.xmin = ModifiedSpinControl(self, -1, u"xmin", 0.01)
+        self.xmax = ModifiedSpinControl(self, -1, u"xmax", 1.0)
+        self.ymin = ModifiedSpinControl(self, -1, u"ymin", 0.1)
+        self.ymax = ModifiedSpinControl(self, -1, u"ymax", 3.0)
+
+
+        sizer = wx.StaticBoxSizer(box, wx.VERTICAL)
+
+        sizer.Add(self.xmin, 0, wx.ALL, 3)
+        sizer.Add(self.xmax, 0, wx.ALL, 3)
+        sizer.Add(self.ymin, 0, wx.ALL, 3)
+        sizer.Add(self.ymax, 0, wx.ALL, 3)
+        self.SetSizer(sizer)
+        sizer.Fit(self)
 
 class CompoundBox(wx.Panel):
     """ Блок выбора материала и состава материала (если выбран InGaAsP).
@@ -123,8 +167,6 @@ class SellmeierBox(wx.Panel):
             # выбрана отрисовка по энергии
             x_pack = compound.get_energies()
         y_pack = compound.get_sellmeier_pack()
-        print y_pack
-        print self.composition
         return x_pack, y_pack
 
 
@@ -248,6 +290,7 @@ class MainFrame(wx.Frame):
         self.compound_control = CompoundBox(self.panel, -1, u'Выбор материала')
         self.refraction_block = RefractionBox(self.panel, -1, u'Показатель преломления')
         self.sellmeier_block = SellmeierBox(self.panel, -1, u'Зависимость Селлмейера')
+        self.spinsection = SpinSection(self.panel, -1, u'')
 
         self.bandgap_button = wx.Button(self.panel, -1, u"Ширина запрещенной зоны")
         self.Bind(wx.EVT_BUTTON, self.show_bandgap, self.bandgap_button)
@@ -268,6 +311,7 @@ class MainFrame(wx.Frame):
         self.hbox2.Add(self.compound_control, border=5, flag=wx.ALL)
         self.hbox2.Add(self.refraction_block, border=5, flag=wx.ALL)
         self.hbox2.Add(self.sellmeier_block, border=5, flag=wx.ALL)
+        self.hbox2.Add(self.spinsection, border=5, flag=wx.ALL)
 
         # устанавливаем сайзеры
         self.vbox = wx.BoxSizer(wx.VERTICAL)
