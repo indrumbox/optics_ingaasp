@@ -15,6 +15,10 @@ def x_on_InP(y):
     else:
         return 0.1894 * y / (0.4184 - 0.013 * y)
 
+def g(ksi):
+    func = 1 / (ksi * ksi) * (2 - math.sqrt(1 + ksi)) if (1 - ksi < 0) else 1 / (ksi * ksi) * (2 - math.sqrt(1 + ksi) - math.sqrt(1 - ksi))
+    return func
+
 class Structure():
 
     def __init__(self, x, y):
@@ -36,13 +40,18 @@ class Structure():
         return self.energies
 
     def sellmeier(self, lambda_value):
-        #todo: внедрить модель Селлмейера
         # работает на согласованном с подложкой материале!
         A = 7.255 + 1.15 * self.y + 0.489 * self.y * self.y
         B = 2.316 + 0.604 * self.y - 0.493 * self.y * self.y
         C = 0.3922 + 0.396 * self.y + 0.158 * self.y * self.y
         epsilon = A + (B * lambda_value * lambda_value) / (lambda_value * lambda_value - C)
         return math.sqrt(abs(epsilon))
+
+    def get_sellmeier_pack(self, lambdas_pack):
+        sellmeier_pack = []
+        for lambda_value in lambdas_pack:
+            sellmeier_pack.append(self.sellmeier(lambda_value))
+        return sellmeier_pack
 
 test = Structure(0., 0.)
 print test.get_lambdas()

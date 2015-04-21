@@ -82,6 +82,56 @@ class CompoundBox(wx.Panel):
         self.composition = evt.GetString()
 
 
+class SellmeierBox(wx.Panel):
+    """ Блок моделирования зависимости Селлмейера для материалов InP и InGaAsP/InP.
+    """
+    def __init__(self, parent, ID, label):
+        wx.Panel.__init__(self, parent, ID)
+
+        box = wx.StaticBox(self, -1, label)
+        self.compositionLabel = wx.StaticText(self, -1, u"Состав материала:")
+        self.compositionEdit = wx.TextCtrl(self, -1, u"0.0", size=(90, -1))
+        self.Bind(wx.EVT_TEXT, self.setComposition,  self.compositionEdit)
+        self.composition = 0.
+
+        self.on_wave = wx.RadioButton(self, -1, u'По длине волны', style=wx.RB_GROUP)
+        self.on_energy = wx.RadioButton(self, -1, u'По энергии')
+
+        composition_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        composition_sizer.Add(self.compositionLabel, 0, wx.ALL | wx.CENTER, 1)
+        composition_sizer.Add(self.compositionEdit, 0, wx.ALL | wx.CENTER, 1)
+
+        radio_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        radio_sizer.Add(self.on_wave, 0, wx.ALL, 1)
+        radio_sizer.Add(self.on_energy, 0, wx.ALL, 1)
+
+        sizer = wx.StaticBoxSizer(box, wx.VERTICAL)
+        sizer.Add(composition_sizer, 0, wx.ALL, 3)
+        sizer.Add(radio_sizer, 0, wx.ALL, 3)
+
+        self.SetSizer(sizer)
+        sizer.Fit(self)
+
+    def push_sellmeier_data(self):
+        # отрисовка графика зависимости
+        compound = dsci.Structure(dsci.x_on_InP(self.composition), self.composition)
+        lambda_pack = compound.get_lambdas()
+        if self.lambda_checked():
+            # выбрана реализация по длине волны
+            x_pack = lambda_pack
+        else:
+            # выбрана отрисовка по энергии
+            x_pack = compound.get_energies()
+        y_pack = compound.get_sellmeier_pack(x_pack)
+        return x_pack, y_pack
+
+
+    def lambda_checked(self):
+        return self.on_wave.GetValue()
+
+    def setComposition(self, evt):
+        self.composition = evt.GetString()
+
 class RefractionBox(wx.Panel):
     """ Блок выбора вкладов в показатель преломления.
     """
@@ -195,22 +245,27 @@ class MainFrame(wx.Frame):
 
         self.compound_control = CompoundBox(self.panel, -1, u'Выбор материала')
         self.refraction_block = RefractionBox(self.panel, -1, u'Показатель преломления')
+        self.sellmeier_block = SellmeierBox(self.panel, -1, u'Зависимость Селлмейера')
 
         self.bandgap_button = wx.Button(self.panel, -1, u"Ширина запрещенной зоны")
         self.Bind(wx.EVT_BUTTON, self.show_bandgap, self.bandgap_button)
         #self.Bind(wx.EVT_UPDATE_UI, self.on_update_pause_button, self.pause_button)
         self.redlambda_button = wx.Button(self.panel, -1, u"Граничная длина волны")
         self.Bind(wx.EVT_BUTTON, self.show_redlambda, self.redlambda_button)
+        self.calculate_sellmeier_button = wx.Button(self.panel, -1, u"Зависимость Селлмейера")
+        self.Bind(wx.EVT_BUTTON, self.show_sellmeier, self.calculate_sellmeier_button)
 
         self.hbox1 = wx.BoxSizer(wx.HORIZONTAL)
         self.hbox1.Add(self.bandgap_button, border=5, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL)
         self.hbox1.AddSpacer(5)
         self.hbox1.Add(self.redlambda_button, border=5, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL)
-        self.hbox1.AddSpacer(10)
+        self.hbox1.AddSpacer(5)
+        self.hbox1.Add(self.calculate_sellmeier_button, border=5, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL)
 
         self.hbox2 = wx.BoxSizer(wx.HORIZONTAL)
         self.hbox2.Add(self.compound_control, border=5, flag=wx.ALL)
         self.hbox2.Add(self.refraction_block, border=5, flag=wx.ALL)
+        self.hbox2.Add(self.sellmeier_block, border=5, flag=wx.ALL)
 
         # устанавливаем сайзеры
         self.vbox = wx.BoxSizer(wx.VERTICAL)
@@ -232,7 +287,6 @@ class MainFrame(wx.Frame):
         self.draw_plot(compositions_y, Eg_transformed, title_main=main_label,
                        title_y=y_label, title_x=x_label)
 
-
     def show_redlambda(self, evt):
         compositions_y = np.arange(0, 1, 0.01)
         lambda_pack = [dsci.lambda_red_on_inp(dsci.x_on_InP(y), y) for y in compositions_y]
@@ -243,6 +297,17 @@ class MainFrame(wx.Frame):
 
         self.draw_plot(compositions_y, lambda_pack_transformed, title_main=main_label,
                        title_y=y_label, title_x=x_label)
+
+    def show_sellmeier(self, evt):
+        x_pack, y_pack = self.sellmeier_block.push_sellmeier_data()
+        y_label = u"Показатель преломления"
+        main_label = u"Модель показателя преломления (зависимость Селлмейера)"
+        if self.sellmeier_block.lambda_checked():
+            x_label = u"Длина волны, мкм"
+        else:
+            x_label = u"Энергия излучения, эВ"
+        self.draw_plot(x_pack, y_pack, title_main=main_label, title_y=y_label, title_x=x_label)
+
 
     def create_status_bar(self):
         self.statusbar = self.CreateStatusBar()
@@ -261,6 +326,9 @@ class MainFrame(wx.Frame):
 
         self.axes.grid(True, color='gray')
         self.plot_data = self.axes.plot([0], linewidth=1, color=(0, 0, 0))[0]
+        self.plot_data_g = self.axes.plot([0], linewidth=1, color='r')[0]
+        self.plot_data_l = self.axes.plot([0], linewidth=1, color='g')[0]
+        self.plot_data_x = self.axes.plot([0], linewidth=1, color='b')[0]
 
         pylab.setp(self.axes.get_xticklabels(), visible=True)
 
