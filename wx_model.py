@@ -87,47 +87,74 @@ class RefractionBox(wx.Panel):
     def __init__(self, parent, ID, label):
         wx.Panel.__init__(self, parent, ID)
 
+        self.g_transitions_flag = False
+        self.l_transitions_flag = False
+        self.x_transitions_flag = False
+        self.indirect_transitions_flag = False
+
         # создаём чекбоксы:
         self.checkbox_g_transitions = wx.CheckBox(self, -1, u"Вклад Г-переходов", style=wx.ALIGN_LEFT)
         self.Bind(wx.EVT_CHECKBOX, self.check_g_transitions, self.checkbox_g_transitions)
-        self.checkbox_g_transitions.SetValue(False)
+        self.checkbox_g_transitions.SetValue(self.g_transitions_flag)
 
         self.checkbox_l_transitions = wx.CheckBox(self, -1, u"Вклад L-переходов", style=wx.ALIGN_LEFT)
         self.Bind(wx.EVT_CHECKBOX, self.check_l_transitions, self.checkbox_l_transitions)
-        self.checkbox_l_transitions.SetValue(False)
+        self.checkbox_l_transitions.SetValue(self.l_transitions_flag)
 
         self.checkbox_x_transitions = wx.CheckBox(self, -1, u"Вклад X-переходов", style=wx.ALIGN_LEFT)
         self.Bind(wx.EVT_CHECKBOX, self.check_x_transitions, self.checkbox_x_transitions)
-        self.checkbox_x_transitions.SetValue(False)
+        self.checkbox_x_transitions.SetValue(self.x_transitions_flag)
 
         self.checkbox_indirect_transitions = wx.CheckBox(self, -1, u"Вклад непрямых переходов", style=wx.ALIGN_LEFT)
         self.Bind(wx.EVT_CHECKBOX, self.check_indirect_transitions, self.checkbox_indirect_transitions)
-        self.checkbox_indirect_transitions.SetValue(False)
-        
-        # !!! разобраться с сайзерами, потому что не работают
+        self.checkbox_indirect_transitions.SetValue(self.indirect_transitions_flag)
+
+        # создаём кнопки
+        self.show_transactions_button = wx.Button(self, -1, u"Показать графики вкладов")
+        self.Bind(wx.EVT_BUTTON, self.show_transactions, self.show_transactions_button)
+
+        self.show_refraction_button = wx.Button(self, -1, u"Распределение показателя преломления")
+        self.Bind(wx.EVT_BUTTON, self.show_refraction, self.show_refraction_button)
+
+        # работаем с сайзерами
         box = wx.StaticBox(self, -1, label)
         sizer = wx.StaticBoxSizer(box, wx.VERTICAL)
-        sizer1 = wx.StaticBoxSizer(sizer, wx.HORIZONTAL)
-        sizer2 = wx.StaticBoxSizer(sizer, wx.HORIZONTAL)
-        sizer1.Add(self.checkbox_g_transitions, 0, wx.ALL | wx.ALIGN_LEFT, 4)
-        sizer1.Add(self.checkbox_l_transitions, 0, wx.ALL | wx.ALIGN_LEFT, 4)
-        sizer2.Add(self.checkbox_x_transitions, 0, wx.ALL | wx.ALIGN_LEFT, 4)
-        sizer2.Add(self.checkbox_indirect_transitions, 0, wx.ALL | wx.ALIGN_LEFT, 4)
-        sizer.Add(sizer1, 0, wx.ALL, 0)
-        sizer.Add(sizer2, 0, wx.ALL, 0)
+
+        grid = wx.GridSizer(2, 2, 0, 0)
+
+        grid.Add(self.checkbox_g_transitions, 0, wx.ALL, 3)
+        grid.Add(self.checkbox_l_transitions, 0, wx.ALL, 3)
+        grid.Add(self.checkbox_x_transitions, 0, wx.ALL, 3)
+        grid.Add(self.checkbox_indirect_transitions, 0, wx.ALL, 3)
+
+        sizer.Add(grid, 0, wx.ALL, 0)
+        sizer.Add(self.show_transactions_button, border=3, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL | wx.EXPAND)
+        sizer.Add(self.show_refraction_button, border=3, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL | wx.EXPAND)
+
         self.SetSizer(sizer)
         sizer.Fit(self)
 
     def check_g_transitions(self, evt):
-        pass
+        self.g_transitions_flag = self.checkbox_g_transitions.GetValue()
+        print self.g_transitions_flag
 
     def check_l_transitions(self, evt):
-        pass
+        self.l_transitions_flag = self.checkbox_l_transitions.GetValue()
+        print self.l_transitions_flag
 
     def check_x_transitions(self, evt):
-        pass
+        self.x_transitions_flag = self.checkbox_x_transitions.GetValue()
+        print self.x_transitions_flag
 
     def check_indirect_transitions(self, evt):
+        self.indirect_transitions_flag = self.checkbox_indirect_transitions.GetValue()
+        print self.indirect_transitions_flag
+
+    def show_transactions(self, evt):
+        #todo: разобраться, как учитывать различные вклады
+        pass
+
+    def show_refraction(self, evt):
         pass
 
 
@@ -188,10 +215,7 @@ class MainFrame(wx.Frame):
         self.hbox2 = wx.BoxSizer(wx.HORIZONTAL)
         self.hbox2.Add(self.compound_control, border=5, flag=wx.ALL)
         self.hbox2.Add(self.refraction_block, border=5, flag=wx.ALL)
-        #self.hbox2.AddSpacer(24)
-        #self.hbox2.Add(self.ymin_control, border=5, flag=wx.ALL)
-        #self.hbox2.Add(self.ymax_control, border=5, flag=wx.ALL)
-        
+
         # устанавливаем сайзеры
         self.vbox = wx.BoxSizer(wx.VERTICAL)
         self.vbox.Add(self.canvas, 1, flag=wx.LEFT | wx.TOP | wx.GROW)        
