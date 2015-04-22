@@ -42,6 +42,7 @@ class DataGen(object):
         else:
             self.data += delta
 
+
 class ModifiedSpinControl(wx.Panel):
     def __init__(self, parent, ID, label, init_value):
         wx.Panel.__init__(self, parent, -1)
@@ -78,6 +79,7 @@ class ModifiedSpinControl(wx.Panel):
         next_value = current_value-0.01
         self.text.SetValue(str(next_value))
 
+
 class SpinSection(wx.Panel):
     def __init__(self, parent, ID, label, xmin=0., xmax=0., ymin=0., ymax=0.):
         wx.Panel.__init__(self, parent, ID)
@@ -88,15 +90,39 @@ class SpinSection(wx.Panel):
         self.ymin = ModifiedSpinControl(self, -1, u"ymin: ", ymin)
         self.ymax = ModifiedSpinControl(self, -1, u"ymax: ", ymax)
 
-        #todo: как прикрутить к спинам зависимость от координат графика?
+        self.cb_fixed = wx.CheckBox(self, -1, u"фиксированные", style=wx.ALIGN_RIGHT)
+        #self.Bind(wx.EVT_CHECKBOX, self.on_cb_fixed, self.cb_fixed)
+        self.cb_fixed.SetValue(False)
+
+        self.apply_button = wx.Button(self, -1, u"ѕрименить")
+
         sizer = wx.StaticBoxSizer(box, wx.VERTICAL)
 
         sizer.Add(self.xmin, 0, wx.ALL, 3)
         sizer.Add(self.xmax, 0, wx.ALL, 3)
         sizer.Add(self.ymin, 0, wx.ALL, 3)
         sizer.Add(self.ymax, 0, wx.ALL, 3)
+        sizer.Add(self.cb_fixed, 0, wx.ALL, 3)
+        sizer.Add(self.apply_button, 0, wx.ALL, 3)
         self.SetSizer(sizer)
         sizer.Fit(self)
+
+    def set_values(self, data):
+        # устанавливаем значени€ границ в едитах
+        x_values = list(data.get_xdata())
+        y_values = list(data.get_ydata())
+        x_min_value = round(min(x_values), 2)
+        x_max_value = round(max(x_values), 2)
+        y_min_value = round(min(y_values), 2)
+        y_max_value = round(max(y_values), 2)
+        self.xmin.text.SetValue(str(x_min_value))
+        self.xmax.text.SetValue(str(x_max_value))
+        self.ymin.text.SetValue(str(y_min_value))
+        self.ymax.text.SetValue(str(y_max_value))
+
+    def fixed_plot(self):
+        return self.cb_fixed.GetValue()
+
 
 class CompoundBox(wx.Panel):
     """ Ѕлок выбора материала и состава материала (если выбран InGaAsP).
@@ -186,6 +212,7 @@ class SellmeierBox(wx.Panel):
 
     def setComposition(self, evt):
         self.composition = float(evt.GetString())
+
 
 class RefractionBox(wx.Panel):
     """ Ѕлок выбора вкладов в показатель преломлени€.
@@ -310,6 +337,7 @@ class MainFrame(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.show_redlambda, self.redlambda_button)
         self.calculate_sellmeier_button = wx.Button(self.panel, -1, u"«ависимость —еллмейера")
         self.Bind(wx.EVT_BUTTON, self.show_sellmeier, self.calculate_sellmeier_button)
+        self.Bind(wx.EVT_BUTTON, self.refresh_plot, self.spinsection.apply_button)
 
         self.hbox1 = wx.BoxSizer(wx.HORIZONTAL)
         self.hbox1.Add(self.bandgap_button, border=5, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL)
@@ -365,7 +393,6 @@ class MainFrame(wx.Frame):
             x_label = u"Ёнерги€ излучени€, э¬"
         self.draw_plot(x_pack, y_pack, title_main=main_label, title_y=y_label, title_x=x_label)
 
-
     def create_status_bar(self):
         self.statusbar = self.CreateStatusBar()
 
@@ -389,7 +416,6 @@ class MainFrame(wx.Frame):
 
         pylab.setp(self.axes.get_xticklabels(), visible=True)
 
-
     def draw_plot(self, x_arr, y_arr, title_main="", title_x="", title_y=""):
         self.plot_data.set_xdata(np.array(x_arr))
         self.plot_data.set_ydata(np.array(y_arr))
@@ -399,8 +425,20 @@ class MainFrame(wx.Frame):
         self.axes.set_title(title_main, size=12)
         self.axes.set_xlabel(title_x)
         self.axes.set_ylabel(title_y)
+        self.axes.set_position([0.07, 0.15, 0.91, 0.75])
         self.canvas.draw()
+        # а вот следующее-устанавливаем в спинах границы, которые можно крутить туда-сюда
+        self.spinsection.set_values(self.plot_data)
 
+    def refresh_plot(self, evt):
+        if not self.spinsection.fixed_plot():
+            x_min_new = float(self.spinsection.xmin.text.GetValue())
+            x_max_new = float(self.spinsection.xmax.text.GetValue())
+            y_min_new = float(self.spinsection.ymin.text.GetValue())
+            y_max_new = float(self.spinsection.ymax.text.GetValue())
+            self.axes.set_xbound(lower=x_min_new, upper=x_max_new)
+            self.axes.set_ybound(lower=y_min_new, upper=y_max_new)
+            self.canvas.draw()
 
     def on_save_plot(self, event):
         file_choices = "PNG (*.png)|*.png"
