@@ -25,9 +25,9 @@ class Structure():
         self.x = x
         self.y = y
 
-        self.lambdas = [i*0.01 for i in range(1, 500)]
-        self.energies = [self.get_energy(lam) for lam in self.lambdas]
-        self.sellmeiers = [self.sellmeier(lam) for lam in self.lambdas]
+        self.lambdas_pack = [i*0.01 for i in range(1, 500)]
+        self.energies_pack = [self.get_energy(lam) for lam in self.lambdas_pack]
+        self.sellmeiers_pack = [self.sellmeier(lam) for lam in self.lambdas_pack]
         self.refraction_g_pack = []
         self.refraction_x_pack = []
         self.refraction_l_pack = []
@@ -35,13 +35,13 @@ class Structure():
 
 
     def get_lambdas(self):
-        return self.lambdas
+        return self.lambdas_pack
 
     def get_energy(self, lambda_value):
         return (6.6256E-34 * 2.99E8) / (1.6e-19 * 1.0e-6 * lambda_value)
 
     def get_energies(self):
-        return self.energies
+        return self.energies_pack
 
     def sellmeier(self, lambda_value):
         # работает на согласованном с подложкой материале!
@@ -52,7 +52,7 @@ class Structure():
         return math.sqrt(abs(epsilon))
 
     def get_sellmeier_pack(self):
-        return self.sellmeiers
+        return self.sellmeiers_pack
 
 y = 0.0
 x = x_on_InP(y)
