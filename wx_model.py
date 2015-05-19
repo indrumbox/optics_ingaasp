@@ -422,12 +422,18 @@ class MainFrame(wx.Frame):
         # у структуры заполнены все данные и можно рассчитать любые вклады по функциям
         # допустим, пока показываются графики только по длине волны .get_lambdas()
         x_pack = compound.get_lambdas()
-        y_pack = compound.get_epsilon_g_pack()
-        y_label = u"Показатель преломления ^ 2"
-        main_label = u"Модель показателя преломления"
+        y_pack = compound.get_refr_g_pack()
+        y_label = u"Диэлектрическая постоянная"
+        main_label = u"Модель диэлектрической проницаемости"
         x_label = u"Длина волны, мкм"
+        self.draw_plot(x_pack, y_pack, selected_plot=self.plot_data_g, title_main=main_label, title_y=y_label, title_x=x_label)
+        y_pack = compound.get_refr_l_pack()
+        self.draw_plot(x_pack, y_pack, selected_plot=self.plot_data_l, title_main=main_label, title_y=y_label, title_x=x_label)
+        y_pack = compound.get_refr_x_pack()
+        self.draw_plot(x_pack, y_pack, selected_plot=self.plot_data_x, title_main=main_label, title_y=y_label, title_x=x_label)
+        y_pack = compound.get_full_refr_pack()
         self.draw_plot(x_pack, y_pack, title_main=main_label, title_y=y_label, title_x=x_label)
-        #todo: нужен обработчик на расчёт переходов!
+
 
 
     def create_status_bar(self):
@@ -453,9 +459,11 @@ class MainFrame(wx.Frame):
 
         pylab.setp(self.axes.get_xticklabels(), visible=True)
 
-    def draw_plot(self, x_arr, y_arr, title_main="", title_x="", title_y=""):
-        self.plot_data.set_xdata(np.array(x_arr))
-        self.plot_data.set_ydata(np.array(y_arr))
+    def draw_plot(self, x_arr, y_arr, selected_plot="default", title_main="", title_x="", title_y=""):
+        if selected_plot == "default":
+            selected_plot = self.plot_data
+        selected_plot.set_xdata(np.array(x_arr))
+        selected_plot.set_ydata(np.array(y_arr))
 
         self.axes.set_xbound(lower=min(x_arr), upper=max(x_arr))
         self.axes.set_ybound(lower=min(y_arr), upper=max(y_arr))
@@ -504,7 +512,7 @@ class MainFrame(wx.Frame):
 
 
 if __name__ == '__main__':
-    app = wx.PySimpleApp()
+    app = wx.App()
     app.frame = MainFrame()
     app.frame.Show()
     app.MainLoop()

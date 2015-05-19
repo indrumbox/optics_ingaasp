@@ -29,6 +29,7 @@ class Structure():
         self.refraction_g_pack = []
         self.refraction_x_pack = []
         self.refraction_l_pack = []
+        self.full_refraction_pack = []
 
         # [A] [B1] [B11] [G] [C] [Gamma] [D] [E0] [delta0] [E1] [delta1] [E2]
 #       так не сработает:
@@ -67,10 +68,31 @@ class Structure():
     def get_sellmeier_pack(self):
         return self.sellmeiers_pack
 
-    def get_epsilon_g_pack(self):
+    def get_refr_g_pack(self):
+        self.refraction_g_pack = []
         for lambda_ in self.lambdas_pack:
-            self.refraction_g_pack.append(self.epsilon0(lambda_))
+            self.refraction_g_pack.append(math.sqrt(self.epsilon0(lambda_)))
         return self.refraction_g_pack
+
+    def get_refr_l_pack(self):
+        self.refraction_l_pack = []
+        for lambda_ in self.lambdas_pack:
+            self.refraction_l_pack.append(math.sqrt(self.epsilon1(lambda_)))
+        return self.refraction_l_pack
+
+    def get_refr_x_pack(self):
+        self.refraction_x_pack = []
+        for lambda_ in self.lambdas_pack:
+            self.refraction_x_pack.append(math.sqrt(self.epsilon2(lambda_)))
+        return self.refraction_x_pack
+
+    def get_full_refr_pack(self):
+        self.full_refraction_pack = []
+        for counter in range(len(self.refraction_g_pack)):
+            self.full_refraction_pack.append(self.refraction_g_pack[counter] + self.refraction_l_pack[counter] + self.refraction_x_pack[counter])
+        #sum_ = lambda x1, x2, x3: x1+x2+x3
+        #self.full_refraction_pack = map[sum_, self.refraction_g_pack, self.refraction_l_pack, self.refraction_x_pack]
+        return self.full_refraction_pack
 
     def g(self, otn_energy):
         if otn_energy < 1.:
@@ -85,7 +107,29 @@ class Structure():
         ksi01 = current_energy / (self.E0 + self.delta0)
         coeff = self.A / pow(self.E0, 1.5)
         eps00 = self.g(ksi00) + self.g(ksi01) * 0.5 * pow(self.E0 / (self.E0+self.delta0), 1.5)
+        if eps00 < 0.:
+            eps00 = 0.
         return coeff * eps00
+
+    def epsilon1(self, lambda_value):
+        current_energy = self.get_energy(lambda_value)
+        func = 0
+        ksi10 = current_energy / self.E1
+        ksi11 = current_energy / (self.E1 + self.delta1)
+        if not ksi10 > 1.:
+            func = func - (self.B1 / (ksi10*ksi10)) * math.log(1 - ksi10*ksi10)
+        if not ksi11 > 1.:
+            func = func - (self.B11 / (ksi11*ksi11)) * math.log(1 - ksi11*ksi11)
+        return func
+
+    def epsilon2(self, lambda_value):
+        current_energy = self.get_energy(lambda_value)
+        ksi20 = current_energy / self.E2
+        func = 0
+        if not ksi20 > 1.:
+            func = self.C * (1 - ksi20*ksi20) / ( (1-ksi20**2)**2 + self.Gamma**2 * ksi20**2 )
+        return func
+
 
 
 
