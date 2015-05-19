@@ -135,11 +135,17 @@ class CompoundBox(wx.Panel):
         box = wx.StaticBox(self, -1, label)
         sizer = wx.StaticBoxSizer(box, wx.VERTICAL)
         self.compounds = [u"InP", u"InAs", u"GaP", u"GaAs", u"InGaAsP"]
-        self.materialCombo = wx.ComboBox(self, -1, u"InP", choices=self.compounds, size=(120, -1))
+        self.materialCombo = wx.ComboBox(self, -1, u"", choices=self.compounds, size=(120, -1))
+        self.materialCombo.SetSelection(4)
         self.Bind(wx.EVT_COMBOBOX, self.chooseCompound,  self.materialCombo)
         self.compositionLabel = wx.StaticText(self, -1, u"Состав материала:")
-        self.compositionEdit = wx.TextCtrl(self, -1, u"0.0", size=(120, -1))
-        self.Bind(wx.EVT_TEXT, self.setComposition,  self.compositionEdit)
+
+        self.x_compositionLabel = wx.StaticText(self, -1, u"X:")
+        self.x_compositionEdit = wx.TextCtrl(self, -1, u"0.0", size=(40, -1))
+        self.Bind(wx.EVT_TEXT, self.setXComposition,  self.x_compositionEdit)
+        self.y_compositionLabel = wx.StaticText(self, -1, u"Y:")
+        self.y_compositionEdit = wx.TextCtrl(self, -1, u"0.0", size=(40, -1))
+        self.Bind(wx.EVT_TEXT, self.setYComposition,  self.y_compositionEdit)
 
 
         # при запуске выбирается InP
@@ -147,9 +153,15 @@ class CompoundBox(wx.Panel):
         self.compound_checked_name = self.compounds[self.compound_checked_id]
         self.composition = 0
 
+        self.compo_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.compo_sizer.Add(self.x_compositionLabel, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 3)
+        self.compo_sizer.Add(self.x_compositionEdit, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 3)
+        self.compo_sizer.Add(self.y_compositionLabel, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 3)
+        self.compo_sizer.Add(self.y_compositionEdit, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 3)
         sizer.Add(self.materialCombo, 0, wx.ALL, 3)
         sizer.Add(self.compositionLabel, 0, wx.ALL, 3)
-        sizer.Add(self.compositionEdit, 0, wx.ALL, 3)
+        #sizer.Add(self.compositionEdit, 0, wx.ALL, 3)
+        sizer.Add(self.compo_sizer, 0, wx.ALL, 3)
         #sizer.Add(manual_box, 0, wx.ALL, 10)
         self.SetSizer(sizer)
         sizer.Fit(self)
@@ -157,10 +169,23 @@ class CompoundBox(wx.Panel):
     def chooseCompound(self, evt):
         self.compound_checked_id = evt.GetSelection()
         self.compound_checked_name = self.compounds[self.compound_checked_id]
+        if self.compound_checked_name == "InGaAsP":
+            pass
+            self.x_compositionEdit.Enable()
+            self.y_compositionEdit.Enable()
+        else:
+            self.x_compositionEdit.Disable()
+            self.y_compositionEdit.Disable()
         return self.compound_checked_name, self.compound_checked_id
 
-    def setComposition(self, evt):
-        self.composition = evt.GetString()
+    def setYComposition(self, evt):
+        self.y_composition = evt.GetString()
+
+    def setXComposition(self, evt):
+        self.x_composition = evt.GetString()
+
+    def getCompound(self):
+        return [float(self.x_compositionEdit.Value), float(self.y_compositionEdit.Value)]
 
 
 class SellmeierBox(wx.Panel):
@@ -244,8 +269,6 @@ class RefractionBox(wx.Panel):
 
         # создаём кнопки
         self.show_transactions_button = wx.Button(self, -1, u"Показать графики вкладов")
-        self.Bind(wx.EVT_BUTTON, self.show_transactions, self.show_transactions_button)
-
         self.show_refraction_button = wx.Button(self, -1, u"Распределение показателя преломления")
         self.Bind(wx.EVT_BUTTON, self.show_refraction, self.show_refraction_button)
 
@@ -282,10 +305,6 @@ class RefractionBox(wx.Panel):
     def check_indirect_transitions(self, evt):
         self.indirect_transitions_flag = self.checkbox_indirect_transitions.GetValue()
         print self.indirect_transitions_flag
-
-    def show_transactions(self, evt):
-        #todo: разобраться, как учитывать различные вклады
-        pass
 
     def show_refraction(self, evt):
         pass
@@ -338,6 +357,9 @@ class MainFrame(wx.Frame):
         self.calculate_sellmeier_button = wx.Button(self.panel, -1, u"Зависимость Селлмейера")
         self.Bind(wx.EVT_BUTTON, self.show_sellmeier, self.calculate_sellmeier_button)
         self.Bind(wx.EVT_BUTTON, self.refresh_plot, self.spinsection.apply_button)
+
+        self.Bind(wx.EVT_BUTTON, self.show_transactions, self.refraction_block.show_transactions_button)
+
 
         self.hbox1 = wx.BoxSizer(wx.HORIZONTAL)
         self.hbox1.Add(self.bandgap_button, border=5, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL)
@@ -392,6 +414,21 @@ class MainFrame(wx.Frame):
         else:
             x_label = u"Энергия излучения, эВ"
         self.draw_plot(x_pack, y_pack, title_main=main_label, title_y=y_label, title_x=x_label)
+
+    def show_transactions(self, evt):
+        [x_, y_] = self.compound_control.getCompound()
+        # создаём структуру с заданными значениями x и y
+        compound = dsci.Structure(x_, y_)
+        # у структуры заполнены все данные и можно рассчитать любые вклады по функциям
+        # допустим, пока показываются графики только по длине волны .get_lambdas()
+        x_pack = compound.get_lambdas()
+        y_pack = compound.get_epsilon_g_pack()
+        y_label = u"Показатель преломления ^ 2"
+        main_label = u"Модель показателя преломления"
+        x_label = u"Длина волны, мкм"
+        self.draw_plot(x_pack, y_pack, title_main=main_label, title_y=y_label, title_x=x_label)
+        #todo: нужен обработчик на расчёт переходов!
+
 
     def create_status_bar(self):
         self.statusbar = self.CreateStatusBar()

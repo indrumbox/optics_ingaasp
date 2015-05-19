@@ -24,7 +24,7 @@ Structures = {'GaAs': {'A': 3.45, 'B1': 6.37, 'B11': 13.08, 'G': 0.10, 'C': 2.39
                        'E1': 2.50, 'delta1': 0.28, 'E2': 4.45},
               'GaP': {'A': 13.76, 'B1': 6.35, 'B11': 9.49, 'G': 0.06, 'C': 2.08,
                       'Gamma': 0.132, 'D': 4.6, 'E0': 2.74, 'delta0': 0.1,
-                      'E1': 3.70, 'delta1': 0.1, 'E2': 5.0}}
+                      'E1': 3.70, 'delta1': 0.07, 'E2': 5.0}}
 
 
 class Structure_edge():
@@ -174,6 +174,23 @@ def show(parameter):
     plt.show()
 
 
+def calculate_parameter_for_xy(parameter, x, y):
+    '''
+    Функция под внешний расчёт параметров по заданным произвольным x и y
+    '''
+    InP = Structure_edge(x=0, y=0)
+    InAs = Structure_edge(x=0, y=1)
+    GaP = Structure_edge(x=1, y=0)
+    GaAs = Structure_edge(x=1, y=1)
+    #Collection = [InP, InAs, GaP, GaAs]
+    edge_values = []
+    edge_values.append(GaAs.find_parameter(parameter))
+    edge_values.append(GaP.find_parameter(parameter))
+    edge_values.append(InAs.find_parameter(parameter))
+    edge_values.append(InP.find_parameter(parameter))
+    return Vegard(edge_values, x, y)
+
+
 def main():
     #print sys.argv
     if len(sys.argv) > 1:
@@ -185,4 +202,4 @@ def main():
         print u"Параметр по умолчанию: A"
         show(param)
 
-main()
+#main()
