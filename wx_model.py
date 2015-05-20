@@ -423,11 +423,22 @@ class MainFrame(wx.Frame):
         compound = dsci.Structure(x_, y_)
         # у структуры заполнены все данные и можно рассчитать любые вклады по функциям
         # допустим, пока показываются графики только по длине волны .get_lambdas()
-        x_pack = compound.get_lambdas()
-        y_pack = compound.get_refr_g_pack()
+
         y_label = u"Диэлектрическая постоянная"
         main_label = u"Модель диэлектрической проницаемости"
-        x_label = u"Длина волны, мкм"
+
+        # todo: пока немного дурная реализация, вынести в отдельный блок чекбоксы
+        if self.sellmeier_block.lambda_checked():
+            # выбрана реализация по длине волны
+            x_pack = compound.get_lambdas()
+            x_label = u"Длина волны, мкм"
+        else:
+            # выбрана отрисовка по энергии
+            x_pack = compound.get_energies()
+            x_label = u"Энергия излучения, эВ"
+
+        y_pack = compound.get_refr_g_pack()
+
         self.draw_plot(x_pack, y_pack, selected_plot=self.plot_data_g, title_main=main_label, title_y=y_label, title_x=x_label)
         y_pack = compound.get_refr_l_pack()
         self.draw_plot(x_pack, y_pack, selected_plot=self.plot_data_l, title_main=main_label, title_y=y_label, title_x=x_label)
