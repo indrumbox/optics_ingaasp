@@ -59,9 +59,15 @@ class Structure():
         return (6.6256E-34 * 2.99E8) / (1.6e-19 * 1.0e-6 * lambda_value)
 
     def get_lambdas(self):
+        # немного тупая реализация, но эти данные уходят на отрисовку;
+        # чтобы значения для энергий были нормальные!
+        self.lambdas_pack = [i*0.01 for i in range(1, 500)]
+        self.energies_pack = [self.get_energy(lam) for lam in self.lambdas_pack]
         return self.lambdas_pack
 
     def get_energies(self):
+        self.energies_pack = [i*0.01 for i in range(20, 1002, 2)] # 0.2...10.0 эВ
+        self.lambdas_pack = [self.get_energy(lam) for lam in self.energies_pack]
         return self.energies_pack
 
     def sellmeier(self, lambda_value):
@@ -78,27 +84,25 @@ class Structure():
     def get_refr_g_pack(self):
         self.refraction_g_pack = []
         for lambda_ in self.lambdas_pack:
-            self.refraction_g_pack.append(self.eps0(lambda_))
+            self.refraction_g_pack.append(self.eps0(lambda_, "eps2"))
         return self.refraction_g_pack
 
     def get_refr_l_pack(self):
         self.refraction_l_pack = []
         for lambda_ in self.lambdas_pack:
-            self.refraction_l_pack.append(self.eps1(lambda_))
+            self.refraction_l_pack.append(self.eps1(lambda_, "eps2"))
         return self.refraction_l_pack
 
     def get_refr_x_pack(self):
         self.refraction_x_pack = []
         for lambda_ in self.lambdas_pack:
-            self.refraction_x_pack.append(math.sqrt(self.epsilon2(lambda_)))
+            self.refraction_x_pack.append(self.eps2(lambda_, "eps2"))
         return self.refraction_x_pack
 
     def get_full_refr_pack(self):
         self.full_refraction_pack = []
-        for counter in range(len(self.refraction_g_pack)):
-            self.full_refraction_pack.append(self.refraction_g_pack[counter] + self.refraction_l_pack[counter] + self.refraction_x_pack[counter])
-        #sum_ = lambda x1, x2, x3: x1+x2+x3
-        #self.full_refraction_pack = map[sum_, self.refraction_g_pack, self.refraction_l_pack, self.refraction_x_pack]
+        for lambda_ in self.lambdas_pack:
+            self.full_refraction_pack.append(self.eps_full(lambda_, "eps2"))
         return self.full_refraction_pack
 
     def g(self, otn_energy):
@@ -141,39 +145,55 @@ class Structure():
             func = self.C * (1 - ksi20*ksi20) / ( (1-ksi20**2)**2 + self.Gamma**2 * ksi20**2 )
         return func
 
-    def eps1(self, lambda_value):
+    def eps0(self, lambda_value, param):
+        current_energy = self.get_energy(lambda_value)
+        ksi0 = current_energy / self.E0
+        ksi0s = current_energy / (self.E0 + self.delta0)
+        epsilon_2 = (self.A / (current_energy**2)) * (H(ksi0-1) * math.sqrt(abs(current_energy-self.E0)) + 0.5 * H(ksi0s-1) * math.sqrt(abs(current_energy - self.E0 - self.delta0)))
+        epsilon_1 = self.A * (self.E0 ** -1.5) * ( f(ksi0) + 0.5 * f(ksi0s) * ((self.E0 / (self.E0 + self.delta0))**1.5) )
+        if param == "eps1":
+            return epsilon_1
+        elif param == "eps2":
+            return epsilon_2
+        else:
+            return ValueError
+
+    def eps1(self, lambda_value, param):
         current_energy = self.get_energy(lambda_value)
         ksi1 = current_energy / self.E1
         ksi1s = current_energy / (self.E1 + self.delta1)
         epsilon_2_1 = self.B1 * math.pi / (ksi1 * ksi1) if ksi1 - 1. > 0. else 0.
         epsilon_2_2 = self.B2 * math.pi / (ksi1s * ksi1s) if ksi1s - 1. > 0. else 0.
         epsilon_2 = epsilon_2_1 + epsilon_2_2
-
-        epsilon_1 = 0.
-        if 1 - ksi1*ksi1 > 0:
-            epsilon_1 = epsilon_1 - self.B1 * math.log(1 - ksi1*ksi1) / (ksi1 * ksi1)
-        if 1 - ksi1s*ksi1s > 0:
-            epsilon_1 = epsilon_1 - self.B2 * math.log(1 - ksi1s*ksi1s) / (ksi1s * ksi1s)
-
+        epsilon_1 = 0. - self.B1 * math.log(1e-5 + abs(1 - ksi1*ksi1)) / (ksi1 * ksi1) - self.B2 * math.log(1e-33 + abs(1 - ksi1s*ksi1s)) / (ksi1s * ksi1s)
         # получили значения для epsilon_1 и epsilon_2
-        e1 = epsilon_1
-        e2 = epsilon_2
-        n = math.sqrt(0.5 * (e1 + math.sqrt(e1*e1 + e2*e2)))
-        return n
+        if param == "eps1":
+            return epsilon_1
+        elif param == "eps2":
+            return epsilon_2
+        else:
+            return ValueError
 
-    def eps0(self, lambda_value):
+    def eps2(self, lambda_value, param):
         current_energy = self.get_energy(lambda_value)
-        ksi0 = current_energy / self.E0
-        ksi0s = current_energy / (self.E0 + self.delta0)
-        epsilon_2 = (self.A / (current_energy**2)) * (H(ksi0-1) * math.sqrt(abs(current_energy-self.E0)) + 0.5 * H(ksi0s-1) * math.sqrt(abs(current_energy - self.E0 - self.delta0)))
-        epsilon_1 = self.A * (self.E0 ** -1.5) * ( f(ksi0) + 0.5 * f(ksi0s) * ((self.E0 / (self.E0 + self.delta0))**1.5) )
-        e1 = epsilon_1
-        e2 = epsilon_2
-        n = math.sqrt(0.5 * (e1 + math.sqrt(e1*e1 + e2*e2)))
-        return n
+        ksi2 = current_energy / self.E2
+        epsilon_2 = self.C * self.Gamma * ksi2 / ((1-ksi2**2)**2 + (self.Gamma*ksi2)**2)
+        epsilon_1 = self.C * (1-ksi2**2) / ((1-ksi2**2)**2 + (self.Gamma*ksi2)**2)
+        if param == "eps1":
+            return epsilon_1
+        elif param == "eps2":
+            return epsilon_2
+        else:
+            return ValueError
+
+    def eps_full(self, lambda_value, param):
+        return self.eps0(lambda_value, param) + self.eps1(lambda_value, param) + self.eps2(lambda_value, param)
 
 
-
+    def refraction_full(self, lambda_value):
+        e1 = self.eps_full(lambda_value, "eps1")
+        e2 = self.eps_full(lambda_value, "eps2")
+        return math.sqrt(0.5 * (e1 + math.sqrt(e1*e1 + e2*e2)))
 
 
 y = 0.0
