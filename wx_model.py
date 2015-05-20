@@ -437,16 +437,19 @@ class MainFrame(wx.Frame):
             x_pack = compound.get_energies()
             x_label = u"Энергия излучения, эВ"
 
-        y_pack = compound.get_refr_g_pack()
+        # сначала показываем вклады в диэлектрическую проницаемость
+        # y_pack = compound.get_epsilon_g_pack()
+        # self.draw_plot(x_pack, y_pack, selected_plot=self.plot_data_g, title_main=main_label, title_y=y_label, title_x=x_label)
+        # y_pack = compound.get_epsilon_l_pack()
+        # self.draw_plot(x_pack, y_pack, selected_plot=self.plot_data_l, title_main=main_label, title_y=y_label, title_x=x_label)
+        # y_pack = compound.get_epsilon_x_pack()
+        # self.draw_plot(x_pack, y_pack, selected_plot=self.plot_data_x, title_main=main_label, title_y=y_label, title_x=x_label)
+        # потом всё целиком - диэлектрическая проницаемость
+        #y_pack = compound.get_full_epsilon_pack()
 
-        self.draw_plot(x_pack, y_pack, selected_plot=self.plot_data_g, title_main=main_label, title_y=y_label, title_x=x_label)
-        y_pack = compound.get_refr_l_pack()
-        self.draw_plot(x_pack, y_pack, selected_plot=self.plot_data_l, title_main=main_label, title_y=y_label, title_x=x_label)
-        y_pack = compound.get_refr_x_pack()
-        self.draw_plot(x_pack, y_pack, selected_plot=self.plot_data_x, title_main=main_label, title_y=y_label, title_x=x_label)
-        y_pack = compound.get_full_refr_pack()
+        # а вот и отрисовка показателя преломления!
+        y_pack = compound.get_refraction_pack()
         self.draw_plot(x_pack, y_pack, title_main=main_label, title_y=y_label, title_x=x_label)
-
 
 
     def create_status_bar(self):

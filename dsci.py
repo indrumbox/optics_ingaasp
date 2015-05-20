@@ -33,9 +33,10 @@ class Structure():
         self.lambdas_pack = [i*0.01 for i in range(1, 500)]
         self.energies_pack = [self.get_energy(lam) for lam in self.lambdas_pack]
         self.sellmeiers_pack = [self.sellmeier(lam) for lam in self.lambdas_pack]
-        self.refraction_g_pack = []
-        self.refraction_x_pack = []
-        self.refraction_l_pack = []
+        self.epsilon_g_pack = []
+        self.epsilon_x_pack = []
+        self.epsilon_l_pack = []
+        self.full_epsilon_pack = []
         self.full_refraction_pack = []
 
         # [A] [B1] [B11] [G] [C] [Gamma] [D] [E0] [delta0] [E1] [delta1] [E2]
@@ -81,28 +82,34 @@ class Structure():
     def get_sellmeier_pack(self):
         return self.sellmeiers_pack
 
-    def get_refr_g_pack(self):
-        self.refraction_g_pack = []
+    def get_epsilon_g_pack(self):
+        self.epsilon_g_pack = []
         for lambda_ in self.lambdas_pack:
-            self.refraction_g_pack.append(self.eps0(lambda_, "eps2"))
-        return self.refraction_g_pack
+            self.epsilon_g_pack.append(self.eps0(lambda_, "eps1"))
+        return self.epsilon_g_pack
 
-    def get_refr_l_pack(self):
-        self.refraction_l_pack = []
+    def get_epsilon_l_pack(self):
+        self.epsilon_l_pack = []
         for lambda_ in self.lambdas_pack:
-            self.refraction_l_pack.append(self.eps1(lambda_, "eps2"))
-        return self.refraction_l_pack
+            self.epsilon_l_pack.append(self.eps1(lambda_, "eps1"))
+        return self.epsilon_l_pack
 
-    def get_refr_x_pack(self):
-        self.refraction_x_pack = []
+    def get_epsilon_x_pack(self):
+        self.epsilon_x_pack = []
         for lambda_ in self.lambdas_pack:
-            self.refraction_x_pack.append(self.eps2(lambda_, "eps2"))
-        return self.refraction_x_pack
+            self.epsilon_x_pack.append(self.eps2(lambda_, "eps1"))
+        return self.epsilon_x_pack
 
-    def get_full_refr_pack(self):
+    def get_full_epsilon_pack(self):
+        self.full_epsilon_pack = []
+        for lambda_ in self.lambdas_pack:
+            self.full_epsilon_pack.append(self.eps_full(lambda_, "eps1"))
+        return self.full_epsilon_pack
+
+    def get_refraction_pack(self):
         self.full_refraction_pack = []
         for lambda_ in self.lambdas_pack:
-            self.full_refraction_pack.append(self.eps_full(lambda_, "eps2"))
+            self.full_refraction_pack.append(self.refraction(lambda_))
         return self.full_refraction_pack
 
     def g(self, otn_energy):
@@ -189,8 +196,7 @@ class Structure():
     def eps_full(self, lambda_value, param):
         return self.eps0(lambda_value, param) + self.eps1(lambda_value, param) + self.eps2(lambda_value, param)
 
-
-    def refraction_full(self, lambda_value):
+    def refraction(self, lambda_value):
         e1 = self.eps_full(lambda_value, "eps1")
         e2 = self.eps_full(lambda_value, "eps2")
         return math.sqrt(0.5 * (e1 + math.sqrt(e1*e1 + e2*e2)))
