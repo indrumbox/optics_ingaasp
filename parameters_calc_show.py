@@ -197,7 +197,7 @@ def main():
         param = sys.argv[1]
         show(param)
     else:
-        print u"Использование: с параметрами [A] [B1] [B11] [G] [C] [Gamma] [D] [E0] [delta0] [E1] [delta1] [E2]"
+        print u"Использование: с параметрами [A] [B1] [B2] [G] [C] [Gamma] [D] [E0] [delta0] [E1] [delta1] [E2]"
         param = "A"
         print u"Параметр по умолчанию: A"
         show(param)

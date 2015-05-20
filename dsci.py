@@ -37,7 +37,7 @@ class Structure():
 #            self.param = calc(param, self.x, self.y)
         self.A = calc("A", self.x, self.y)
         self.B1 = calc("B1", self.x, self.y)
-        self.B11 = calc("B11", self.x, self.y)
+        self.B2 = calc("B2", self.x, self.y)
         self.G = calc("G", self.x, self.y)
         self.C = calc("C", self.x, self.y)
         self.Gamma = calc("Gamma", self.x, self.y)
@@ -116,10 +116,14 @@ class Structure():
         func = 0
         ksi10 = current_energy / self.E1
         ksi11 = current_energy / (self.E1 + self.delta1)
-        if not ksi10 > 1.:
-            func = func - (self.B1 / (ksi10*ksi10)) * math.log(1 - ksi10*ksi10)
-        if not ksi11 > 1.:
-            func = func - (self.B11 / (ksi11*ksi11)) * math.log(1 - ksi11*ksi11)
+        # if not ksi10 > 1.:
+        #     func = func - (self.B1 / (ksi10*ksi10)) * math.log(1 - ksi10*ksi10)
+        # if not ksi11 > 1.:
+        #     func = func - (self.B11 / (ksi11*ksi11)) * math.log(1 - ksi11*ksi11)
+        arg1 = 1 - ksi10*ksi10 if not ksi10 > 1. else 1e-30
+        arg2 = 1 - ksi11*ksi11 if not ksi11 > 1. else 1e-30
+
+        func = 0. - (self.B1 / (ksi10*ksi10)) * math.log(arg1) - (self.B2 / (ksi11*ksi11)) * math.log(arg2)
         return func
 
     def epsilon2(self, lambda_value):
