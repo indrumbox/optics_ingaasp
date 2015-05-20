@@ -448,6 +448,7 @@ class MainFrame(wx.Frame):
         #y_pack = compound.get_full_epsilon_pack()
 
         # а вот и отрисовка показателя преломления!
+        # todo: разобраться, почему получаются столь низкие значения показателя преломления (должны быть больше трёх)
         y_pack = compound.get_refraction_pack()
         self.draw_plot(x_pack, y_pack, title_main=main_label, title_y=y_label, title_x=x_label)
 
