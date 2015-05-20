@@ -180,9 +180,11 @@ class CompoundBox(wx.Panel):
 
     def setYComposition(self, evt):
         self.y_composition = evt.GetString()
+        print self.y_composition
 
     def setXComposition(self, evt):
         self.x_composition = evt.GetString()
+        print self.x_composition
 
     def getCompound(self):
         return [float(self.x_compositionEdit.Value), float(self.y_compositionEdit.Value)]
