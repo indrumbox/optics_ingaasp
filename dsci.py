@@ -38,6 +38,8 @@ class Structure():
         self.epsilon_l_pack = []
         self.full_epsilon_pack = []
         self.full_refraction_pack = []
+        self.full_extinction_pack = []
+        self.full_absorption_pack = []
 
         # [A] [B1] [B11] [G] [C] [Gamma] [D] [E0] [delta0] [E1] [delta1] [E2]
 #       так не сработает:
@@ -111,6 +113,19 @@ class Structure():
         for lambda_ in self.lambdas_pack:
             self.full_refraction_pack.append(self.refraction(lambda_))
         return self.full_refraction_pack
+
+    def get_extinction_pack(self):
+        self.full_extinction_pack = []
+        for lambda_ in self.lambdas_pack:
+            self.full_extinction_pack.append(self.extinction(lambda_))
+        return self.full_extinction_pack
+
+    def get_absorption_pack(self):
+        self.full_absorption_pack = []
+        for lambda_ in self.lambdas_pack:
+            self.full_absorption_pack.append(self.absorption(lambda_))
+        return self.full_absorption_pack
+
 
     def g(self, otn_energy):
         if otn_energy < 1.:
@@ -201,6 +216,13 @@ class Structure():
         e2 = self.eps_full(lambda_value, "eps2")
         return math.sqrt(0.5 * (e1 + math.sqrt(e1*e1 + e2*e2)))
 
+    def extinction(self, lambda_value):
+        e1 = self.eps_full(lambda_value, "eps1")
+        e2 = self.eps_full(lambda_value, "eps2")
+        return math.sqrt(0.5 * (math.sqrt(e1*e1 + e2*e2) - e1))
+
+    def absorption(self, lambda_value):
+        return 4 * math.pi * self.extinction(lambda_value) / (lambda_value * 1e-4)
 
 y = 0.0
 x = x_on_InP(y)
