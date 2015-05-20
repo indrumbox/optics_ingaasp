@@ -390,7 +390,7 @@ class MainFrame(wx.Frame):
         self.draw_plot([1, 2, 3], [1, 10, 50])
 
     def make_logarithmic(self, evt):
-        self.axes.semilogy()
+        self.axes.semilogx()
 
     def show_bandgap(self, evt):
         compositions_y = np.arange(0, 1, 0.01)
