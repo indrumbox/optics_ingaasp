@@ -13,16 +13,16 @@ rc('font', **font)
 
 
 # Adachi [4]
-Structures = {'GaAs': {'A': 3.45, 'B1': 6.37, 'B11': 13.08, 'G': 0.10, 'C': 2.39,
+Structures = {'GaAs': {'A': 3.45, 'B1': 2.731, 'B2': 2.407, 'G': 0.10, 'C': 2.39,
                        'Gamma': 0.146, 'D': 24.2, 'E0': 1.42, 'delta0': 0.35,
                        'E1': 2.90, 'delta1': 0.23, 'E2': 4.7},
-              'InP': {'A': 6.57, 'B1': 4.93, 'B11': 10.43, 'G': 0.10, 'C': 1.49,
+              'InP': {'A': 6.57, 'B1': 2.414, 'B2': 2.234, 'G': 0.10, 'C': 1.49,
                       'Gamma': 0.094, 'D': 60.4, 'E0': 1.35, 'delta0': 0.1,
                       'E1': 3.10, 'delta1': 0.15, 'E2': 4.7},
-              'InAs': {'A': 0.61, 'B1': 6.59, 'B11': 13.76, 'G': 0.21, 'C': 1.78,
+              'InAs': {'A': 0.61, 'B1': 3.014, 'B2': 2.525, 'G': 0.21, 'C': 1.78,
                        'Gamma': 0.108, 'D': 20.8, 'E0': 0.36, 'delta0': 0.4,
                        'E1': 2.50, 'delta1': 0.28, 'E2': 4.45},
-              'GaP': {'A': 13.76, 'B1': 6.35, 'B11': 9.49, 'G': 0.06, 'C': 2.08,
+              'GaP': {'A': 13.76, 'B1': 2.166, 'B2': 2.101, 'G': 0.06, 'C': 2.08,
                       'Gamma': 0.132, 'D': 4.6, 'E0': 2.74, 'delta0': 0.1,
                       'E1': 3.70, 'delta1': 0.07, 'E2': 5.0}}
 
@@ -41,7 +41,7 @@ class Structure_edge():
         self.core = Structures.keys()[self.ID]
         self.values = Structures.values()[self.ID]
 
-        return None
+        #return None
 
     def __str__(self):
         return Structures.keys()[self.ID]
