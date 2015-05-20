@@ -204,6 +204,7 @@ class SellmeierBox(wx.Panel):
 
         self.on_wave = wx.RadioButton(self, -1, u'По длине волны', style=wx.RB_GROUP)
         self.on_energy = wx.RadioButton(self, -1, u'По энергии')
+        self.logarithmic = wx.CheckBox(self, -1, u'Логарифмический масштаб')
 
         composition_sizer = wx.BoxSizer(wx.HORIZONTAL)
         composition_sizer.Add(self.compositionLabel, 0, wx.ALL | wx.CENTER, 1)
@@ -216,6 +217,7 @@ class SellmeierBox(wx.Panel):
         sizer = wx.StaticBoxSizer(box, wx.VERTICAL)
         sizer.Add(composition_sizer, 0, wx.ALL, 3)
         sizer.Add(radio_sizer, 0, wx.ALL, 3)
+        sizer.Add(self.logarithmic, 0, wx.ALL, 3)
 
         self.SetSizer(sizer)
         sizer.Fit(self)
@@ -272,7 +274,7 @@ class RefractionBox(wx.Panel):
         # создаём кнопки
         self.show_transactions_button = wx.Button(self, -1, u"Показать графики вкладов")
         self.show_refraction_button = wx.Button(self, -1, u"Распределение показателя преломления")
-        self.Bind(wx.EVT_BUTTON, self.show_refraction, self.show_refraction_button)
+
 
         # работаем с сайзерами
         box = wx.StaticBox(self, -1, label)
@@ -308,8 +310,6 @@ class RefractionBox(wx.Panel):
         self.indirect_transitions_flag = self.checkbox_indirect_transitions.GetValue()
         print self.indirect_transitions_flag
 
-    def show_refraction(self, evt):
-        pass
 
 
 class MainFrame(wx.Frame):
@@ -361,7 +361,8 @@ class MainFrame(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.refresh_plot, self.spinsection.apply_button)
 
         self.Bind(wx.EVT_BUTTON, self.show_transactions, self.refraction_block.show_transactions_button)
-
+        self.Bind(wx.EVT_CHECKBOX, self.make_logarithmic, self.sellmeier_block.logarithmic)
+        self.Bind(wx.EVT_BUTTON, self.show_refraction, self.refraction_block.show_refraction_button)
 
         self.hbox1 = wx.BoxSizer(wx.HORIZONTAL)
         self.hbox1.Add(self.bandgap_button, border=5, flag=wx.ALL | wx.ALIGN_CENTER_VERTICAL)
@@ -384,6 +385,12 @@ class MainFrame(wx.Frame):
         
         self.panel.SetSizer(self.vbox)
         self.vbox.Fit(self)
+
+    def show_refraction(self, evt):
+        self.draw_plot([1, 2, 3], [1, 10, 50])
+
+    def make_logarithmic(self, evt):
+        self.axes.semilogy()
 
     def show_bandgap(self, evt):
         compositions_y = np.arange(0, 1, 0.01)
@@ -449,10 +456,12 @@ class MainFrame(wx.Frame):
 
         # а вот и отрисовка показателя преломления!
         # todo: разобраться, почему получаются столь низкие значения показателя преломления (должны быть больше трёх)
-        y_pack = compound.get_refraction_pack()
-        #y_pack = compound.get_absorption_pack()
+        #y_pack = compound.get_refraction_pack()
+        y_pack = compound.get_absorption_pack()
         #y_pack = compound.get_extinction_pack()
+        # todo: научиться делать логарифмические оси
         self.draw_plot(x_pack, y_pack, title_main=main_label, title_y=y_label, title_x=x_label)
+        #self.axes.semilogy()
 
 
     def create_status_bar(self):
@@ -493,6 +502,7 @@ class MainFrame(wx.Frame):
         self.canvas.draw()
         # а вот следующее-устанавливаем в спинах границы, которые можно крутить туда-сюда
         self.spinsection.set_values(self.plot_data)
+
 
     def refresh_plot(self, evt):
         if not self.spinsection.fixed_plot():
